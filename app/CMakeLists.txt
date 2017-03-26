@@ -1,18 +1,21 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-
+#设置变量SRC_DIR为lamemp3的所在路径
 set(SRC_DIR src/main/cpp/lamemp3)
 
-add_library(
-             native-lib
-             SHARED
-             src/main/cpp/native-lib.cpp )
-
+#指定头文件所在，可以多次调用，指定多个路径
 include_directories(src/main/cpp/lamemp3)
 
+#添加自自定义的so库时，有两种方式，一种添加一个目录，一种一个个文件添加
+
+#设定一个目录
 aux_source_directory(src/main/cpp/lamemp3 SRC_LIST)
-add_library(lamemp3 SHARED ${SRC_LIST})
+
+#将前面目录下所有的文件都添加进去
+add_library(lamemp3 SHARED src/main/cpp/SimpleLame.cpp ${SRC_LIST})
+
+#一个个文件的加
 #add_library(lame-mp3
 #            SHARED
 #            ${SRC_DIR}/bitstream.c
@@ -37,13 +40,4 @@ add_library(lamemp3 SHARED ${SRC_LIST})
 #            ${SRC_DIR}/version.c
 #            )
 
-find_library(
-              log-lib
-              log )
-
-target_link_libraries( # Specifies the target library.
-                       native-lib
-
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib} )
+find_library(log-lib log )

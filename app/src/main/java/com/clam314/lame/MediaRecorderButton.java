@@ -16,35 +16,41 @@ import java.io.File;
  */
 public class MediaRecorderButton extends Button implements MediaRecorderListener{
 
+    //用于标识按钮不同状态，显示不同的样式
     private static final int NORMAL_STATUS = 109;
     private static final int RECORDING_STATUS = 110;
     private static final int CANCEL_STATUS = 111;
     private static final int DISTANCE_Y_CANCEL = 50;
 
-    public static final int RECORDER_SUCCESS = 209;
-    public static final int RECORDER_FAIL = 210;
+    //设置录音的最短时长,过短的录音当做取消
     private static final long timeDistance = 1000;
+
+    //延迟开始录音的时间，防止连按，多次触发录音功能导致阻塞主线程
+    private static final long DELAYED_TIME = 15*100;
+
+    //用于标识录音的不同状态
+    public static final int RECORDER_SUCCESS = 209;
     public static final int START_RECORDER = 200;
-    public static final int END_RECORDER_50S = 250;
     public static final int END_RECORDER_60S = 260;
     public static final int END_RECORDER_TOO_SHORT = 270;
     public static final int END_RECORDER_CANCEL = 280;
     private static final int COUNT_STATUS = 180;
-    private static final long DELAYED_TIME = 15*100;
+
+
     private long startTime = 0;
     private long downTime = 0;
     private boolean cancelCount = false;
     private boolean wantCancel = false;
     private boolean recording = false;
-    private boolean over60s = false;
+    private boolean overMaxRecodeTime = false;
     private String bastPath;
-//    private MediaRecorderListener recorderListener;
     private RecorderStatusListener statusListener;
     private RecorderFinishListener finishListener;
     private int mSecond = 0;
+
     private Handler handler = new Handler(Looper.getMainLooper()){
         static final int COUNT_TIME_END = 0;
-        int count = 60;
+        int count = 60;//限制录音的最大时长，单位秒
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -62,7 +68,7 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
                     if (count == COUNT_TIME_END) {
                         removeMessages(COUNT_STATUS);
                         changeBackground(NORMAL_STATUS);
-                        over60s = true;
+                        overMaxRecodeTime = true;
                         endRecorder(false);
                         if(statusListener != null) statusListener.onEnd(END_RECORDER_60S);
                         count = 60;
@@ -94,18 +100,7 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
 
     private void init() {
         bastPath = getBasePath();
-        //利用长按来延时，防止连按，多次触发录音功能导致阻塞主线程
-//        setOnLongClickListener(new OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View v) {
-//                MediaRecorderManager.startRecorder(bastPath);
-//                AudioRecorderManager.startRecord(bastPath);
-//                startTime = System.currentTimeMillis();
-//                recording = true;
-//                return true;
-//            }
-//        });
-//    }
+        changeBackground(NORMAL_STATUS);
     }
 
     public  String getBasePath() {
@@ -116,7 +111,9 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
             strPath = Environment.getExternalStorageDirectory() + "/" + "lameMp3";
         }
         File dir = new File(strPath);
-        dir.mkdirs();
+        if(!dir.exists()){
+            dir.mkdirs();
+        }
         return strPath;
     }
 
@@ -136,10 +133,9 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
     }
 
     private void startRecorder(String basePath){
-        over60s = false;
+        overMaxRecodeTime = false;
         mSecond = 0;
-//        AudioRecorderManager.startRecord(basePath);
-        LameMp3Manager.instance.startRecorder(basePath);
+        LameMp3Manager.instance.startRecorder(basePath+File.separator+"lame.mp3");
         startTime = System.currentTimeMillis();
         recording = true;
         cancelCount = false;
@@ -151,31 +147,14 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
         if(recording){
             boolean tooShort = System.currentTimeMillis() - startTime < timeDistance;
             if(tooShort){
-//              MediaRecorderManager.cancelRecorder();
-//                AudioRecorderManager.cancelRecord();
                 LameMp3Manager.instance.cancelRecorder();
                 if(statusListener != null) statusListener.onEnd(END_RECORDER_TOO_SHORT);
             }else if(wantCancel){
-//              MediaRecorderManager.cancelRecorder();
-//              AudioRecorderManager.cancelRecord();
                 LameMp3Manager.instance.cancelRecorder();
                 this.cancelCount = true;
                 this.wantCancel = false;
             }else {
                 LameMp3Manager.instance.stopRecorder();
-
-/*              String finishPath = MediaRecorderManager.stopRecorder();
-                final String finishPath = AudioRecorderManager.stopRecord();
-                if(recorderListener != null){
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            String path = AudioRecorderManager.convertWaveFile(finishPath);
-                            recorderListener.onRecorderFinish( finishPath == null ? RECORDER_FAIL : RECORDER_SUCCESS, path);
-                        }
-                    }).start();
-                }*/
-
             }
             recording = false;
         }
@@ -204,7 +183,8 @@ public class MediaRecorderButton extends Button implements MediaRecorderListener
                 if(System.currentTimeMillis() - downTime < DELAYED_TIME){
                     handler.removeMessages(START_RECORDER);
                 }
-                if(!over60s){
+                //录音时间没有超时才停止录音
+                if(!overMaxRecodeTime){
                     endRecorder(wantCancel);
                     cancelCount = true;
                 }

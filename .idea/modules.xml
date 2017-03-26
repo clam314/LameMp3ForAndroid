@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Lame.iml" filepath="$PROJECT_DIR$/Lame.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LameMp3ForAndroid.iml" filepath="$PROJECT_DIR$/LameMp3ForAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

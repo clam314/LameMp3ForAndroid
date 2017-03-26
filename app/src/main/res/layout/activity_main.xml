@@ -14,7 +14,10 @@
     <ImageView
         android:id="@+id/bt_player"
         android:layout_width="match_parent"
-        android:layout_height="100dp" />
+        android:layout_height="100dp"
+        android:padding="20dp"
+        android:scaleType="fitStart"
+        android:background="#acf"/>
 
     <com.clam314.lame.MediaRecorderButton
         android:id="@+id/bt_media_recorder"

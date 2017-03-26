@@ -14,7 +14,6 @@ import static android.R.attr.path;
 public class MainActivity extends AppCompatActivity {
     private MediaRecorderButton btRecorder;
     private ImageView btPlayer;
-    private AnimationDrawable frameDrawable;
     private String filePath;
 
     @Override
@@ -22,9 +21,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        frameDrawable = (AnimationDrawable) getResources().getDrawable(R.drawable.anim_voice_left);
+        //创建播放时用的动画
+        AnimationDrawable frameDrawable = (AnimationDrawable) getResources().getDrawable(R.drawable.anim_voice_left);
         btPlayer = (ImageView)findViewById(R.id.bt_player);
         btPlayer.setImageDrawable(frameDrawable);
+        //动画显示在第一帧
         frameDrawable.selectDrawable(0);
         btPlayer.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -34,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     if(v.getTag() != null){
                         String tag =  (String) v.getTag();
+                        //语音正在播放，此时单击停止播放
                         if("showing".equals(tag)){
+                            //释放资源
                             MediaPlayUtil.release();
                             ((AnimationDrawable)((ImageView)v).getDrawable()).stop();
                             ((AnimationDrawable)((ImageView)v).getDrawable()).selectDrawable(0);
@@ -43,9 +46,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
 
+                    //开始播放语音，并开始动画
                     ((AnimationDrawable)((ImageView)v).getDrawable()).start();
                     v.setTag("showing");
-
+                    MediaPlayUtil.init(getApplicationContext());
                     MediaPlayUtil.playSound(filePath, new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
@@ -58,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
         btRecorder = (MediaRecorderButton)findViewById(R.id.bt_media_recorder);
         btRecorder.setFinishListener(new MediaRecorderButton.RecorderFinishListener() {
             @Override
@@ -75,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEnd(int status) {
+                //status除了是状态还有录音的秒数
                 switch (status){
                     case MediaRecorderButton.END_RECORDER_TOO_SHORT:
                         Toast.makeText(MainActivity.this,"讲话时间太短啦！",Toast.LENGTH_SHORT).show();
@@ -90,14 +97,4 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
-
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
 }
