@@ -15,3 +15,7 @@
 1. Mp3Recorder调用startRecording()开始录制并初始化DataEncoderThread线程，并定期将录制的PCM数据，传入DataEncoderThread中。
 2. 在DataEncoderThread里，SimpleLame将Mp3Recorder传入的PCM数据转换成MP3格式并写入文件，其中SimpleLame通过jni对Lame库进行调用
 3. Mp3Recorder调用stopRecording()停止录制，并通知DataEncoderThread线程录制结束，DataEncoderThread将剩余的数据转换完毕。
+#### 编译过程
+- http://www.jianshu.com/p/065bfe6d3ec2#
+#### 详细点的讲解
+- http://www.jianshu.com/p/4a3e24e45ce9
